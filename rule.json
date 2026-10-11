@@ -1,0 +1,28 @@
+{
+  "rule_id": "rmm-lab-001",
+  "name": "Remote support agent installed or registered as a service",
+  "description": "Lab rule for the CTIA rmm-tool-abuse-001 scenario. Matches any process creation whose command line carries a package-install or service switch - the shape every RMM agent uses to install itself silently and then to register itself as a Windows service. Written as a technique rather than as a filter on one host, so it is estate-wide: across this lab's entire day of 272 auth events it matches exactly two documents, both on the affected server, and no benign process. Two alerts is the right number here and it is worth understanding why. This rule sees only the process-creation stage of the chain. It does NOT see the scheduled task registered in the same second (event 4698), and it does not see the outbound beaconing at all, because that lives in the network-* data view and this rule indexes auth-* only. A real detection set is several rules rather than one, and this is deliberately the shape of the gap: one rule catching one stage of a four-stage intrusion is the normal condition, not a defect. One alert per matching document, with no threshold, because the two records are the finding - the same binary appearing once as a user and once as SYSTEM - and a summary line would hide that.",
+  "type": "query",
+  "risk_score": 73,
+  "severity": "high",
+  "tags": [
+    "ctia-lab",
+    "rmm-abuse",
+    "remote-access",
+    "persistence",
+    "detection-engineering"
+  ],
+  "enabled": true,
+  "interval": "1m",
+  "from": "now-365d",
+  "to": "now",
+  "index": [
+    "auth-*"
+  ],
+  "timeField": "@timestamp",
+  "query": "event.code: 4688 and (process.command_line: *--install* or process.command_line: *--service*)",
+  "language": "kuery",
+  "max_signals": 100,
+  "actions": [],
+  "notify_when": "onActiveAlert"
+}
